@@ -1,0 +1,23 @@
+name: WHMCloudFlare
+version: 1.0.0
+description: ماژول خودکارسازی DNS برای WHM و Cloudflare
+author: Your Name
+license: MIT
+
+hooks:
+  - name: Accounts::Create
+    script: hooks/createacct.php
+    stage: post
+    
+  - name: Accounts::Remove
+    script: hooks/removeacct.php
+    stage: post
+    
+  - name: Accounts::ChangePackage
+    script: hooks/changepackage.php
+    stage: post
+    
+  - name: Accounts::SetSiteIP
+    script: hooks/setsiteip.php
+    stage: post
+

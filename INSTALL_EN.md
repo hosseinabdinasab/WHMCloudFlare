@@ -1,0 +1,117 @@
+# WHMCloudFlare Installation Guide
+
+## Prerequisites
+
+- WHM/cPanel version 11.80 or higher
+- PHP 7.4 or higher
+- Root access to the server
+- API Token or API Key + Email from Cloudflare
+- Internet access for Cloudflare API communication
+
+## Installation Steps
+
+### 1. Download and Copy Files
+
+```bash
+# Copy project files to appropriate directory
+cp -r WHMCloudFlare /usr/local/cpanel/whm/addons/
+```
+
+### 2. Run Installation Script
+
+```bash
+cd /usr/local/cpanel/whm/addons/WHMCloudFlare
+chmod +x install/install.sh
+./install/install.sh
+```
+
+### 3. Set Permissions
+
+```bash
+chmod -R 755 /usr/local/cpanel/whm/addons/WHMCloudFlare
+chmod 777 /usr/local/cpanel/whm/addons/WHMCloudFlare/logs
+chmod 777 /usr/local/cpanel/whm/addons/WHMCloudFlare/config
+```
+
+### 4. Get API Token from Cloudflare
+
+1. Log in to your Cloudflare account
+2. Go to **My Profile** > **API Tokens**
+3. Click **Create Token**
+4. Use the **Edit zone DNS** template
+5. Select your Zone
+6. Copy the token (it will only be shown once!)
+
+**Or** you can use API Key:
+- **Email**: Your Cloudflare account email
+- **Global API Key**: From **My Profile** > **API Tokens** > **Global API Key**
+
+### 5. Get Zone ID
+
+1. Log in to Cloudflare Dashboard
+2. Select your domain
+3. In the **Overview** section, find Zone ID on the right side
+
+### 6. Configure in WHM
+
+1. Log in to WHM
+2. Go to **Plugins** > **WHMCloudFlare**
+3. Enter the following information:
+   - **API Token** (or API Email + API Key)
+   - **Zone ID**
+4. Enable automation settings
+5. Click **Save Settings**
+6. Click **Test Connection**
+
+### 7. Enable Module
+
+In the settings page, enable the **Enable Module** option.
+
+## Testing Installation
+
+To test the installation:
+
+1. Create a test account in WHM
+2. Check that DNS records have been created in Cloudflare
+3. Check logs in the settings page
+
+## Uninstallation
+
+To uninstall the module:
+
+```bash
+cd /usr/local/cpanel/whm/addons/WHMCloudFlare
+chmod +x install/uninstall.sh
+./install/uninstall.sh
+```
+
+## Troubleshooting
+
+### Issue: Hooks are not executing
+
+```bash
+# Check registered hooks
+/usr/local/cpanel/bin/manage_hooks list
+
+# Check logs
+tail -f /usr/local/cpanel/whm/addons/WHMCloudFlare/logs/whmcloudflare-*.log
+```
+
+### Issue: Cloudflare connection error
+
+- Verify that API Token or API Key is valid
+- Verify that Zone ID is correct
+- Verify that server has internet access
+- Use the **Test Connection** button in the settings page
+
+### Issue: Records are not being created
+
+- Verify that the module is enabled
+- Check logs for errors
+- Verify that Zone ID is correct
+- Verify that the domain exists in the selected Zone
+
+## Support
+
+To report issues or suggest new features, please create an Issue in the project repository.
+

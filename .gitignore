@@ -1,0 +1,42 @@
+# لاگ‌ها
+logs/*.log
+logs/audit.log
+
+# تنظیمات (شامل اطلاعات حساس)
+config/settings.json
+config/.encryption_key
+config/statistics.json
+
+# Cache
+cache/*
+!cache/.gitkeep
+
+# فایل‌های موقت
+*.tmp
+*.bak
+*.swp
+*~
+
+# IDE
+.idea/
+.vscode/
+*.sublime-*
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Backup files
+*.backup
+*.old
+
+# Composer (if used in future)
+vendor/
+composer.lock
+
+# Node modules (if used in future)
+node_modules/
+package-lock.json
+
