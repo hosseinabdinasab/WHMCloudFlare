@@ -1,23 +1,12 @@
 name: WHMCloudFlare
 version: 1.0.0
-description: ماژول خودکارسازی DNS برای WHM و Cloudflare
-author: Your Name
+description: Automated DNS Management Module for WHM/cPanel and Cloudflare
+author: Hossein Abdinasab
 license: MIT
+url: https://github.com/hosseinabdinasab/WHMCloudFlare
 
-hooks:
-  - name: Accounts::Create
-    script: hooks/createacct.php
-    stage: post
-    
-  - name: Accounts::Remove
-    script: hooks/removeacct.php
-    stage: post
-    
-  - name: Accounts::ChangePackage
-    script: hooks/changepackage.php
-    stage: post
-    
-  - name: Accounts::SetSiteIP
-    script: hooks/setsiteip.php
-    stage: post
+ui:
+  - name: WHMCloudFlare
+    link: /usr/local/cpanel/whm/addons/WHMCloudFlare/ui/index.php
+    target: _self
 

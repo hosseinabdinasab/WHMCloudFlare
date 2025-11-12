@@ -149,6 +149,18 @@ copy_files() {
         cp "$CURRENT_DIR/LICENSE" "$INSTALL_DIR/"
     fi
     
+    # کپی فایل پیکربندی پلاگین (مهم برای نمایش در لیست پلاگین‌ها)
+    if [ -f "$CURRENT_DIR/whmcloudflare.cpanel.yml" ]; then
+        cp "$CURRENT_DIR/whmcloudflare.cpanel.yml" "$INSTALL_DIR/"
+        chmod 644 "$INSTALL_DIR/whmcloudflare.cpanel.yml"
+    fi
+    
+    # کپی اسکریپت رفع مشکل نمایش
+    if [ -f "$CURRENT_DIR/fix_plugin_display.sh" ]; then
+        cp "$CURRENT_DIR/fix_plugin_display.sh" "$INSTALL_DIR/"
+        chmod +x "$INSTALL_DIR/fix_plugin_display.sh"
+    fi
+    
     # اطمینان از executable بودن Hook ها بعد از کپی
     chmod +x "$INSTALL_DIR/hooks/"*.php 2>/dev/null
     
@@ -391,6 +403,9 @@ show_summary() {
     echo "- Installation Guide: $INSTALL_DIR/INSTALL.md"
     echo "- API Documentation: $INSTALL_DIR/docs/API.md"
     echo "- FAQ: $INSTALL_DIR/docs/FAQ.md"
+    echo ""
+    echo -e "${YELLOW}Note:${NC} If the plugin doesn't appear in WHM Plugins list, run:"
+    echo "  cd $INSTALL_DIR && sudo ./fix_plugin_display.sh"
     echo ""
     echo -e "${GREEN}Thank you for using WHMCloudFlare!${NC}"
     echo ""
