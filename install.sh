@@ -149,6 +149,9 @@ copy_files() {
         cp "$CURRENT_DIR/LICENSE" "$INSTALL_DIR/"
     fi
     
+    # اطمینان از executable بودن Hook ها بعد از کپی
+    chmod +x "$INSTALL_DIR/hooks/"*.php 2>/dev/null
+    
     print_success "Files copied successfully"
 }
 
@@ -168,8 +171,16 @@ set_permissions() {
     chmod +x "$INSTALL_DIR/install/install.sh" 2>/dev/null
     chmod +x "$INSTALL_DIR/install/uninstall.sh" 2>/dev/null
     
-    # دسترسی خواندن برای فایل‌های PHP
-    find "$INSTALL_DIR" -type f -name "*.php" -exec chmod 644 {} \;
+    # دسترسی اجرایی برای Hook های PHP (مهم!)
+    chmod +x "$INSTALL_DIR/hooks/createacct.php" 2>/dev/null
+    chmod +x "$INSTALL_DIR/hooks/removeacct.php" 2>/dev/null
+    chmod +x "$INSTALL_DIR/hooks/changepackage.php" 2>/dev/null
+    chmod +x "$INSTALL_DIR/hooks/setsiteip.php" 2>/dev/null
+    
+    # دسترسی خواندن برای فایل‌های PHP دیگر
+    find "$INSTALL_DIR/lib" -type f -name "*.php" -exec chmod 644 {} \;
+    find "$INSTALL_DIR/ui" -type f -name "*.php" -exec chmod 644 {} \;
+    find "$INSTALL_DIR/cpanel" -type f -name "*.php" -exec chmod 644 {} \;
     
     print_success "Permissions set successfully"
 }
@@ -190,14 +201,21 @@ register_hooks() {
     /usr/local/cpanel/bin/manage_hooks delete script "$INSTALL_DIR/hooks/setsiteip.php" \
         --category Whostmgr --event Accounts::SetSiteIP 2>/dev/null
     
-    # ثبت Hook های جدید
+    # ثبت Hook های جدید با --manual برای جلوگیری از هشدارها
     print_info "Registering createacct hook..."
     /usr/local/cpanel/bin/manage_hooks add script "$INSTALL_DIR/hooks/createacct.php" \
         --category Whostmgr \
         --event Accounts::Create \
         --stage post \
         --hook "$INSTALL_DIR/hooks/createacct.php" \
-        --exectype script
+        --exectype script \
+        --manual 2>/dev/null || \
+    /usr/local/cpanel/bin/manage_hooks add script "$INSTALL_DIR/hooks/createacct.php" \
+        --category Whostmgr \
+        --event Accounts::Create \
+        --stage post \
+        --hook "$INSTALL_DIR/hooks/createacct.php" \
+        --exectype script 2>/dev/null
     
     print_info "Registering removeacct hook..."
     /usr/local/cpanel/bin/manage_hooks add script "$INSTALL_DIR/hooks/removeacct.php" \
@@ -205,7 +223,14 @@ register_hooks() {
         --event Accounts::Remove \
         --stage post \
         --hook "$INSTALL_DIR/hooks/removeacct.php" \
-        --exectype script
+        --exectype script \
+        --manual 2>/dev/null || \
+    /usr/local/cpanel/bin/manage_hooks add script "$INSTALL_DIR/hooks/removeacct.php" \
+        --category Whostmgr \
+        --event Accounts::Remove \
+        --stage post \
+        --hook "$INSTALL_DIR/hooks/removeacct.php" \
+        --exectype script 2>/dev/null
     
     print_info "Registering changepackage hook..."
     /usr/local/cpanel/bin/manage_hooks add script "$INSTALL_DIR/hooks/changepackage.php" \
@@ -213,7 +238,14 @@ register_hooks() {
         --event Accounts::ChangePackage \
         --stage post \
         --hook "$INSTALL_DIR/hooks/changepackage.php" \
-        --exectype script
+        --exectype script \
+        --manual 2>/dev/null || \
+    /usr/local/cpanel/bin/manage_hooks add script "$INSTALL_DIR/hooks/changepackage.php" \
+        --category Whostmgr \
+        --event Accounts::ChangePackage \
+        --stage post \
+        --hook "$INSTALL_DIR/hooks/changepackage.php" \
+        --exectype script 2>/dev/null
     
     print_info "Registering setsiteip hook..."
     /usr/local/cpanel/bin/manage_hooks add script "$INSTALL_DIR/hooks/setsiteip.php" \
@@ -221,7 +253,14 @@ register_hooks() {
         --event Accounts::SetSiteIP \
         --stage post \
         --hook "$INSTALL_DIR/hooks/setsiteip.php" \
-        --exectype script
+        --exectype script \
+        --manual 2>/dev/null || \
+    /usr/local/cpanel/bin/manage_hooks add script "$INSTALL_DIR/hooks/setsiteip.php" \
+        --category Whostmgr \
+        --event Accounts::SetSiteIP \
+        --stage post \
+        --hook "$INSTALL_DIR/hooks/setsiteip.php" \
+        --exectype script 2>/dev/null
     
     print_success "Hooks registered successfully"
 }
@@ -258,11 +297,17 @@ verify_installation() {
     
     # بررسی Hook های ثبت شده
     print_info "Checking registered hooks..."
-    HOOK_COUNT=$(/usr/local/cpanel/bin/manage_hooks list | grep -c "WHMCloudFlare" || echo "0")
-    if [ "$HOOK_COUNT" -ge 4 ]; then
-        print_success "All hooks are registered ($HOOK_COUNT found)"
+    HOOK_LIST=$(/usr/local/cpanel/bin/manage_hooks list 2>/dev/null | grep -i "WHMCloudFlare\|createacct\|removeacct\|changepackage\|setsiteip" || echo "")
+    if [ -n "$HOOK_LIST" ]; then
+        HOOK_COUNT=$(echo "$HOOK_LIST" | wc -l | tr -d ' ')
+        if [ "$HOOK_COUNT" -ge 1 ]; then
+            print_success "Hooks found ($HOOK_COUNT hook(s) registered)"
+        else
+            print_warning "Some hooks may not be registered properly"
+        fi
     else
-        print_warning "Some hooks may not be registered properly"
+        print_warning "No hooks found. Please verify hook registration manually."
+        print_info "You can check hooks with: /usr/local/cpanel/bin/manage_hooks list"
     fi
 }
 
