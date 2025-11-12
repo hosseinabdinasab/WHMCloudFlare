@@ -83,18 +83,25 @@
 **راه‌حل:**
 1. بررسی ثبت Hook ها:
    ```bash
-   /usr/local/cpanel/bin/manage_hooks list
+   /usr/local/cpanel/bin/manage_hooks list | grep WHMCloudFlare
    ```
+   باید 4 Hook نمایش داده شود.
 
-2. اگر Hook ها ثبت نشده‌اند، اسکریپت نصب را دوباره اجرا کنید:
+2. اگر Hook ها ثبت نشده‌اند، نصب کننده خودکار را دوباره اجرا کنید:
    ```bash
    cd /usr/local/cpanel/whm/addons/WHMCloudFlare
-   ./install/install.sh
+   sudo ./install.sh
+   ```
+   
+   یا اگر در ریشه پروژه هستید:
+   ```bash
+   sudo ./install.sh
    ```
 
 3. بررسی دسترسی فایل‌ها:
    ```bash
    ls -la /usr/local/cpanel/whm/addons/WHMCloudFlare/hooks/
+   chmod +x /usr/local/cpanel/whm/addons/WHMCloudFlare/hooks/*.php
    ```
 
 ---

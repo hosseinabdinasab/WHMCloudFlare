@@ -108,9 +108,10 @@ If this project was useful to you, please give it a ⭐!
 
 ## 📚 More Documentation
 
-- [Installation Guide](INSTALL.md)
-- [Features List](FEATURES.md)
-- [API Documentation](docs/API.md)
-- [FAQ](docs/FAQ.md)
-- [Troubleshooting](docs/TROUBLESHOOTING.md)
+- [🚀 Quick Start Guide](QUICK_START_EN.md) | [راهنمای سریع (Persian)](QUICK_START.md)
+- [📖 Full Installation Guide](INSTALL_EN.md) | [راهنمای نصب (Persian)](INSTALL.md)
+- [✨ Features List](FEATURES.md)
+- [📡 API Documentation](docs/API.md)
+- [❓ FAQ](docs/FAQ.md)
+- [🔧 Troubleshooting](docs/TROUBLESHOOTING.md)
 

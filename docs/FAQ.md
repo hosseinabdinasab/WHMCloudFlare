@@ -16,15 +16,38 @@ A: WHM/cPanel نسخه 11.80 یا بالاتر.
 ## نصب و راه‌اندازی
 
 ### Q: چگونه ماژول را نصب کنم؟
-A: مراحل نصب در فایل `INSTALL.md` به تفصیل توضیح داده شده است.
+A: ساده‌ترین روش استفاده از نصب کننده خودکار است:
+
+```bash
+git clone https://github.com/hosseinabdinasab/WHMCloudFlare.git
+cd WHMCloudFlare
+chmod +x install.sh
+sudo ./install.sh
+```
+
+برای جزئیات بیشتر به [راهنمای نصب](../INSTALL.md) یا [راهنمای سریع](../QUICK_START.md) مراجعه کنید.
 
 ### Q: خطای "دسترسی غیرمجاز" می‌گیرم
 A: مطمئن شوید که با کاربر root وارد WHM شده‌اید.
 
 ### Q: Hook ها اجرا نمی‌شوند
 A: 
-1. بررسی کنید که Hook ها در WHM ثبت شده‌اند: `/usr/local/cpanel/bin/manage_hooks list`
-2. بررسی لاگ‌ها: `tail -f /usr/local/cpanel/whm/addons/WHMCloudFlare/logs/*.log`
+1. بررسی کنید که Hook ها در WHM ثبت شده‌اند: 
+   ```bash
+   /usr/local/cpanel/bin/manage_hooks list | grep WHMCloudFlare
+   ```
+   باید 4 Hook نمایش داده شود.
+
+2. اگر Hook ها ثبت نشده‌اند، نصب کننده خودکار را دوباره اجرا کنید:
+   ```bash
+   cd /usr/local/cpanel/whm/addons/WHMCloudFlare
+   sudo ./install.sh
+   ```
+
+3. بررسی لاگ‌ها: 
+   ```bash
+   tail -f /usr/local/cpanel/whm/addons/WHMCloudFlare/logs/*.log
+   ```
 
 ---
 

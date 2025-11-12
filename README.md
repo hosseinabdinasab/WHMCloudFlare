@@ -130,9 +130,10 @@ WHMCloudFlare/
 
 ## 📚 مستندات بیشتر
 
-- [راهنمای نصب](INSTALL.md) | [Installation Guide (English)](INSTALL_EN.md)
-- [فهرست ویژگی‌ها](FEATURES.md)
-- [مستندات API](docs/API.md)
-- [سوالات متداول](docs/FAQ.md)
-- [راهنمای عیب‌یابی](docs/TROUBLESHOOTING.md)
+- [🚀 راهنمای سریع نصب](QUICK_START.md) | [Quick Start (English)](QUICK_START_EN.md)
+- [📖 راهنمای کامل نصب](INSTALL.md) | [Installation Guide (English)](INSTALL_EN.md)
+- [✨ فهرست ویژگی‌ها](FEATURES.md)
+- [📡 مستندات API](docs/API.md)
+- [❓ سوالات متداول](docs/FAQ.md)
+- [🔧 راهنمای عیب‌یابی](docs/TROUBLESHOOTING.md)
 

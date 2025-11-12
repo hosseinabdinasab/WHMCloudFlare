@@ -10,27 +10,61 @@
 
 ## Installation Steps
 
-### 1. Download and Copy Files
+### Method 1: Automated Installation (Recommended) ⭐
+
+The easiest and fastest installation method:
 
 ```bash
-# Copy project files to appropriate directory
-cp -r WHMCloudFlare /usr/local/cpanel/whm/addons/
+# 1. Clone or download the project
+git clone https://github.com/hosseinabdinasab/WHMCloudFlare.git
+cd WHMCloudFlare
+
+# 2. Run the automated installer
+chmod +x install.sh
+sudo ./install.sh
 ```
 
-### 2. Run Installation Script
+**What the automated installer does:**
+- ✅ Checks prerequisites (WHM, PHP, cURL)
+- ✅ Creates backup of previous installation (if exists)
+- ✅ Creates necessary directories
+- ✅ Copies all files
+- ✅ Sets proper permissions
+- ✅ Creates default configuration
+- ✅ Registers WHM hooks
+- ✅ Tests PHP syntax
+- ✅ Validates installation
+
+**Benefits of automated installation:**
+- 🚀 Fast and easy
+- 🛡️ Automatic prerequisite checking
+- 💾 Automatic backup
+- ✅ Testing and validation
+- 📊 Progress display with colors
+
+### Method 2: Manual Installation
+
+If you prefer manual installation:
 
 ```bash
+# 1. Copy project files to appropriate directory
+cp -r WHMCloudFlare /usr/local/cpanel/whm/addons/
+
+# 2. Run installation script
 cd /usr/local/cpanel/whm/addons/WHMCloudFlare
 chmod +x install/install.sh
-./install/install.sh
+sudo ./install/install.sh
 ```
 
 ### 3. Set Permissions
+
+**Note:** If you used the automated installer, this step has been done automatically.
 
 ```bash
 chmod -R 755 /usr/local/cpanel/whm/addons/WHMCloudFlare
 chmod 777 /usr/local/cpanel/whm/addons/WHMCloudFlare/logs
 chmod 777 /usr/local/cpanel/whm/addons/WHMCloudFlare/config
+chmod 777 /usr/local/cpanel/whm/addons/WHMCloudFlare/cache
 ```
 
 ### 4. Get API Token from Cloudflare
@@ -69,20 +103,56 @@ In the settings page, enable the **Enable Module** option.
 
 ## Testing Installation
 
-To test the installation:
+### Verify Installation
+
+After installation, you can verify the installation:
+
+```bash
+# Check registered hooks
+/usr/local/cpanel/bin/manage_hooks list | grep WHMCloudFlare
+
+# Check installed files
+ls -la /usr/local/cpanel/whm/addons/WHMCloudFlare/
+
+# Check logs
+tail -f /usr/local/cpanel/whm/addons/WHMCloudFlare/logs/*.log
+```
+
+### Test Functionality
+
+To test functionality:
 
 1. Create a test account in WHM
 2. Check that DNS records have been created in Cloudflare
 3. Check logs in the settings page
+4. Use the statistics dashboard to view statistics
 
 ## Uninstallation
 
-To uninstall the module:
+### Method 1: Using Automated Uninstaller
 
 ```bash
 cd /usr/local/cpanel/whm/addons/WHMCloudFlare
 chmod +x install/uninstall.sh
-./install/uninstall.sh
+sudo ./install/uninstall.sh
+```
+
+**Note:** The uninstaller automatically:
+- ✅ Backs up settings
+- ✅ Removes WHM hooks
+- ✅ Removes files
+
+### Method 2: Manual Uninstallation
+
+```bash
+# Remove hooks
+/usr/local/cpanel/bin/manage_hooks delete script /usr/local/cpanel/whm/addons/WHMCloudFlare/hooks/createacct.php --category Whostmgr --event Accounts::Create
+/usr/local/cpanel/bin/manage_hooks delete script /usr/local/cpanel/whm/addons/WHMCloudFlare/hooks/removeacct.php --category Whostmgr --event Accounts::Remove
+/usr/local/cpanel/bin/manage_hooks delete script /usr/local/cpanel/whm/addons/WHMCloudFlare/hooks/changepackage.php --category Whostmgr --event Accounts::ChangePackage
+/usr/local/cpanel/bin/manage_hooks delete script /usr/local/cpanel/whm/addons/WHMCloudFlare/hooks/setsiteip.php --category Whostmgr --event Accounts::SetSiteIP
+
+# Remove files
+rm -rf /usr/local/cpanel/whm/addons/WHMCloudFlare
 ```
 
 ## Troubleshooting

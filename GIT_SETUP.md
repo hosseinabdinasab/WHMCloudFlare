@@ -27,7 +27,16 @@ git init
 git add .
 
 # Commit اولیه
-git commit -m "Initial commit: WHMCloudFlare v1.0.0"
+git commit -m "Initial commit: WHMCloudFlare v1.0.0 - Complete automated DNS management for WHM/cPanel and Cloudflare
+
+Features:
+- Multi-language support (Persian & English)
+- Advanced security (encryption, audit logging)
+- Performance optimization (cache, retry mechanism)
+- Statistics dashboard
+- Email notifications
+- SSL/TLS management
+- Multiple Zone support"
 
 # اضافه کردن Remote Repository
 git remote add origin https://github.com/hosseinabdinasab/WHMCloudFlare.git
