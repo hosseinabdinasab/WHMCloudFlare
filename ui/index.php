@@ -6,6 +6,10 @@ if (!class_exists('WHM')) {
     require_once '/usr/local/cpanel/php/WHM.php';
 }
 
+if (!headers_sent()) {
+    header('Content-Type: text/html; charset=utf-8');
+}
+
 Security::requireWhmAuth();
 
 $cfg = Config::load();
