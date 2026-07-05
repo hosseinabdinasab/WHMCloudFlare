@@ -1,25 +1,20 @@
 <?php
 
-require_once '/var/cpanel/addons/whmcloudflare/lib/Bootstrap.php';
+header('Content-Type: text/html; charset=utf-8');
 
-if (!class_exists('WHM')) {
-    require_once '/usr/local/cpanel/php/WHM.php';
-}
+require_once __DIR__ . '/lib/Bootstrap.php';
 
-if (!headers_sent()) {
-    header('Content-Type: text/html; charset=utf-8');
-}
-
-Security::requireWhmAuth();
+Security::requireRoot();
 
 $cfg = Config::load();
 Language::init((string) ($cfg['language'] ?? 'en'));
 
 $flash = null;
 $flashType = 'info';
+$cpToken = Security::cpSecurityToken();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!Security::verifyCsrf($_POST['csrf'] ?? null)) {
+    if (!Security::verifyWhmToken($_POST['cp_security_token'] ?? null)) {
         $flash = Language::get('csrf_error');
         $flashType = 'error';
     } else {
@@ -77,7 +72,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$csrf = Security::csrfToken();
 $authMode = (string) ($cfg['auth_mode'] ?? 'token');
 $logFile = Paths::logs() . '/whmcloudflare.log';
 $logLines = [];
@@ -86,100 +80,103 @@ if (is_file($logFile)) {
     $logLines = array_slice($lines, -30);
 }
 
-WHM::header(Language::get('title'));
+$h = static function (string $s): string {
+    return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
+};
 ?>
-<p><?php echo htmlspecialchars(Language::get('subtitle'), ENT_QUOTES, 'UTF-8'); ?></p>
+<div class="whmcf-panel">
+<p><?php echo $h(Language::get('subtitle')); ?></p>
 
 <?php if ($flash): ?>
 <div class="alert alert-<?php echo $flashType === 'error' ? 'danger' : ($flashType === 'success' ? 'success' : 'info'); ?>">
-    <?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?>
+    <?php echo $h($flash); ?>
 </div>
 <?php endif; ?>
 
-<form method="post" class="form-horizontal">
-    <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8'); ?>">
+<form method="post" class="form-horizontal" onsubmit="return whmcfSubmit(this);">
+    <input type="hidden" name="cp_security_token" value="<?php echo $h($cpToken); ?>">
 
-    <h3><?php echo htmlspecialchars(Language::get('settings'), ENT_QUOTES, 'UTF-8'); ?></h3>
+    <h3><?php echo $h(Language::get('settings')); ?></h3>
 
     <div class="form-group">
-        <label class="col-sm-3 control-label"><?php echo htmlspecialchars(Language::get('enabled'), ENT_QUOTES, 'UTF-8'); ?></label>
+        <label class="col-sm-3 control-label"><?php echo $h(Language::get('enabled')); ?></label>
         <div class="col-sm-9">
             <input type="checkbox" name="enabled" value="1" <?php echo !empty($cfg['enabled']) ? 'checked' : ''; ?>>
         </div>
     </div>
 
     <div class="form-group">
-        <label class="col-sm-3 control-label"><?php echo htmlspecialchars(Language::get('auth_mode'), ENT_QUOTES, 'UTF-8'); ?></label>
+        <label class="col-sm-3 control-label"><?php echo $h(Language::get('auth_mode')); ?></label>
         <div class="col-sm-9">
             <label class="radio-inline">
                 <input type="radio" name="auth_mode" value="token" <?php echo $authMode !== 'global' ? 'checked' : ''; ?>>
-                <?php echo htmlspecialchars(Language::get('auth_token'), ENT_QUOTES, 'UTF-8'); ?>
+                <?php echo $h(Language::get('auth_token')); ?>
             </label>
             <label class="radio-inline">
                 <input type="radio" name="auth_mode" value="global" <?php echo $authMode === 'global' ? 'checked' : ''; ?>>
-                <?php echo htmlspecialchars(Language::get('auth_global'), ENT_QUOTES, 'UTF-8'); ?>
+                <?php echo $h(Language::get('auth_global')); ?>
             </label>
         </div>
     </div>
 
     <div class="form-group">
-        <label class="col-sm-3 control-label"><?php echo htmlspecialchars(Language::get('api_token'), ENT_QUOTES, 'UTF-8'); ?></label>
+        <label class="col-sm-3 control-label"><?php echo $h(Language::get('api_token')); ?></label>
         <div class="col-sm-9">
             <input type="password" class="form-control" name="api_token" autocomplete="new-password" placeholder="<?php echo Config::apiToken() !== '' ? '********' : ''; ?>">
         </div>
     </div>
 
     <div class="form-group">
-        <label class="col-sm-3 control-label"><?php echo htmlspecialchars(Language::get('email'), ENT_QUOTES, 'UTF-8'); ?></label>
+        <label class="col-sm-3 control-label"><?php echo $h(Language::get('email')); ?></label>
         <div class="col-sm-9">
-            <input type="email" class="form-control" name="email" value="<?php echo htmlspecialchars((string) ($cfg['email'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
+            <input type="email" class="form-control" name="email" value="<?php echo $h((string) ($cfg['email'] ?? '')); ?>">
         </div>
     </div>
 
     <div class="form-group">
-        <label class="col-sm-3 control-label"><?php echo htmlspecialchars(Language::get('global_api_key'), ENT_QUOTES, 'UTF-8'); ?></label>
+        <label class="col-sm-3 control-label"><?php echo $h(Language::get('global_api_key')); ?></label>
         <div class="col-sm-9">
             <input type="password" class="form-control" name="global_api_key" autocomplete="new-password" placeholder="<?php echo Config::globalApiKey() !== '' ? '********' : ''; ?>">
         </div>
     </div>
 
     <div class="form-group">
-        <label class="col-sm-3 control-label"><?php echo htmlspecialchars(Language::get('auto_create_dns'), ENT_QUOTES, 'UTF-8'); ?></label>
+        <label class="col-sm-3 control-label"><?php echo $h(Language::get('auto_create_dns')); ?></label>
         <div class="col-sm-9">
             <input type="checkbox" name="auto_create_dns" value="1" <?php echo !empty($cfg['auto_create_dns']) ? 'checked' : ''; ?>>
         </div>
     </div>
 
     <div class="form-group">
-        <label class="col-sm-3 control-label"><?php echo htmlspecialchars(Language::get('auto_delete_dns'), ENT_QUOTES, 'UTF-8'); ?></label>
+        <label class="col-sm-3 control-label"><?php echo $h(Language::get('auto_delete_dns')); ?></label>
         <div class="col-sm-9">
             <input type="checkbox" name="auto_delete_dns" value="1" <?php echo !empty($cfg['auto_delete_dns']) ? 'checked' : ''; ?>>
         </div>
     </div>
 
     <div class="form-group">
-        <label class="col-sm-3 control-label"><?php echo htmlspecialchars(Language::get('auto_update_ip'), ENT_QUOTES, 'UTF-8'); ?></label>
+        <label class="col-sm-3 control-label"><?php echo $h(Language::get('auto_update_ip')); ?></label>
         <div class="col-sm-9">
             <input type="checkbox" name="auto_update_ip" value="1" <?php echo !empty($cfg['auto_update_ip']) ? 'checked' : ''; ?>>
         </div>
     </div>
 
     <div class="form-group">
-        <label class="col-sm-3 control-label"><?php echo htmlspecialchars(Language::get('proxied'), ENT_QUOTES, 'UTF-8'); ?></label>
+        <label class="col-sm-3 control-label"><?php echo $h(Language::get('proxied')); ?></label>
         <div class="col-sm-9">
             <input type="checkbox" name="proxied" value="1" <?php echo !empty($cfg['proxied']) ? 'checked' : ''; ?>>
         </div>
     </div>
 
     <div class="form-group">
-        <label class="col-sm-3 control-label"><?php echo htmlspecialchars(Language::get('ttl'), ENT_QUOTES, 'UTF-8'); ?></label>
+        <label class="col-sm-3 control-label"><?php echo $h(Language::get('ttl')); ?></label>
         <div class="col-sm-9">
             <input type="number" class="form-control" name="ttl" min="1" value="<?php echo (int) ($cfg['ttl'] ?? 1); ?>">
         </div>
     </div>
 
     <div class="form-group">
-        <label class="col-sm-3 control-label"><?php echo htmlspecialchars(Language::get('language'), ENT_QUOTES, 'UTF-8'); ?></label>
+        <label class="col-sm-3 control-label"><?php echo $h(Language::get('language')); ?></label>
         <div class="col-sm-9">
             <select name="language" class="form-control">
                 <option value="en" <?php echo ($cfg['language'] ?? 'en') === 'en' ? 'selected' : ''; ?>>English</option>
@@ -190,19 +187,18 @@ WHM::header(Language::get('title'));
 
     <div class="form-group">
         <div class="col-sm-offset-3 col-sm-9">
-            <button type="submit" name="action" value="save" class="btn btn-primary"><?php echo htmlspecialchars(Language::get('save'), ENT_QUOTES, 'UTF-8'); ?></button>
-            <button type="submit" name="action" value="test" class="btn btn-default"><?php echo htmlspecialchars(Language::get('test'), ENT_QUOTES, 'UTF-8'); ?></button>
+            <button type="submit" name="action" value="save" class="btn btn-primary"><?php echo $h(Language::get('save')); ?></button>
+            <button type="submit" name="action" value="test" class="btn btn-default"><?php echo $h(Language::get('test')); ?></button>
         </div>
     </div>
 </form>
 
-<h3><?php echo htmlspecialchars(Language::get('log_tail'), ENT_QUOTES, 'UTF-8'); ?></h3>
-<pre style="max-height:240px;overflow:auto;background:#f5f5f5;padding:10px;"><?php
+<h3><?php echo $h(Language::get('log_tail')); ?></h3>
+<pre class="whmcf-log"><?php
 if ($logLines) {
-    echo htmlspecialchars(implode("\n", $logLines), ENT_QUOTES, 'UTF-8');
+    echo $h(implode("\n", $logLines));
 } else {
-    echo htmlspecialchars(Language::get('no_logs'), ENT_QUOTES, 'UTF-8');
+    echo $h(Language::get('no_logs'));
 }
 ?></pre>
-<?php
-WHM::footer();
+</div>

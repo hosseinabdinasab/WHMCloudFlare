@@ -1,0 +1,37 @@
+[%
+USE Whostmgr;
+
+IF locale.get_html_dir_attr() == 'rtl';
+    SET rtl_bootstrap = Whostmgr.find_file_url('/3rdparty/bootstrap-rtl/optimized/dist/css/bootstrap-rtl.min.css');
+END;
+
+SET styleSheets = [
+    rtl_bootstrap,
+    '/themes/x/style_optimized.css'
+];
+
+SET jsScripts = [
+    '/cjt/cpanel-all-min.js',
+    'static/js/whmcloudflare.js'
+];
+
+WRAPPER 'master_templates/master.tmpl'
+    breadcrumbdata = {
+        previous = [
+            { name = 'Home', url = '/scripts/command?PFILE=main' },
+            { name = 'Plugins', url = '/scripts/command?PFILE=Plugins' }
+        ],
+        name = 'WHMCloudFlare',
+        url = '/cgi/whmcloudflare/whmcloudflare.cgi',
+    },
+    header = locale.maketext('WHMCloudFlare'),
+    skipheader = 1,
+    stylesheets = styleSheets,
+    scripts = jsScripts,
+    extrastyle = '.whmcf-log { max-height: 240px; overflow: auto; background: #f5f5f5; padding: 10px; }',
+    theme = 'bootstrap';
+%]
+
+<div id="whmcfContent" class="whmcf-loading">Loading&hellip;</div>
+
+[% END %]

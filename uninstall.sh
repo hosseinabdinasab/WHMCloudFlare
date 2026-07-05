@@ -10,8 +10,8 @@ if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
 fi
 
 WHM_DOCROOT="/usr/local/cpanel/whostmgr/docroot"
-ADDON_ROOT="/var/cpanel/addons/whmcloudflare"
-CGI_DIR="${WHM_DOCROOT}/cgi/whmcloudflare"
+PLUGIN_DIR="${WHM_DOCROOT}/cgi/whmcloudflare"
+TMPL_DIR="${WHM_DOCROOT}/templates/whmcloudflare"
 UNREGISTER="/usr/local/cpanel/bin/unregister_appconfig"
 MANAGE_HOOKS="/usr/local/cpanel/bin/manage_hooks"
 
@@ -27,21 +27,25 @@ if [[ -x "$UNREGISTER" ]]; then
     "$UNREGISTER" whmcloudflare 2>/dev/null || true
 fi
 
-rm -rf "$CGI_DIR"
+rm -rf "$TMPL_DIR"
 rm -rf "${WHM_DOCROOT}/cgi/addons/whmcloudflare"
 rm -rf "${WHM_DOCROOT}/cgi/addons/WHMCloudFlare"
 rm -rf "/usr/local/cpanel/whm/addons/WHMCloudFlare"
-rm -rf "/usr/local/cpanel/whm/addons/whmcloudflare"
+rm -rf "/var/cpanel/addons/whmcloudflare"
 
-read -r -p "Remove config and logs in $ADDON_ROOT? [y/N] " ans
-if [[ "${ans,,}" == "y" ]]; then
-    rm -rf "$ADDON_ROOT"
-    echo "Removed addon data."
-else
-    echo "Kept $ADDON_ROOT (config/logs preserved)."
-    rm -rf "$ADDON_ROOT"/{lib,lang,ui,hooks}
-fi
+read -r -p "Remove plugin and data in ${PLUGIN_DIR}? [y/N] " ans
+case "${ans}" in
+    [yY]|[yY][eE][sS])
+        rm -rf "$PLUGIN_DIR"
+        echo "Removed ${PLUGIN_DIR}"
+        ;;
+    *)
+        if [[ -d "$PLUGIN_DIR" ]]; then
+            find "$PLUGIN_DIR" -mindepth 1 -maxdepth 1 ! -name data -exec rm -rf {} +
+            echo "Kept ${PLUGIN_DIR}/data (config/logs preserved)"
+        fi
+        ;;
+esac
 
 /usr/local/cpanel/bin/whmapi1 nvset datastore_version 1 >/dev/null 2>&1 || true
-
 echo "Uninstall complete."

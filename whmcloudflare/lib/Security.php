@@ -2,37 +2,27 @@
 
 final class Security {
     public static function whmUser(): ?string {
-        $user = $_SERVER['REMOTE_USER'] ?? getenv('REMOTE_USER') ?: null;
+        $user = $_ENV['REMOTE_USER'] ?? $_SERVER['REMOTE_USER'] ?? getenv('REMOTE_USER') ?: null;
         return ($user && preg_match('/^[a-z0-9_]+$/i', $user)) ? $user : null;
     }
 
-    public static function requireWhmAuth(): string {
-        $user = self::whmUser();
-        if (!$user) {
-            header('HTTP/1.1 403 Forbidden');
-            echo 'WHM authentication required.';
+    public static function requireRoot(): void {
+        if (self::whmUser() !== 'root') {
+            http_response_code(403);
+            echo '<div class="alert alert-danger">Only root may access WHMCloudFlare.</div>';
             exit;
         }
-        return $user;
     }
 
-    public static function csrfToken(): string {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
-        if (empty($_SESSION['whmcf_csrf'])) {
-            $_SESSION['whmcf_csrf'] = bin2hex(random_bytes(32));
-        }
-        return $_SESSION['whmcf_csrf'];
+    public static function cpSecurityToken(): string {
+        return (string) ($_ENV['cp_security_token'] ?? '');
     }
 
-    public static function verifyCsrf(?string $token): bool {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
-        return is_string($token)
-            && !empty($_SESSION['whmcf_csrf'])
-            && hash_equals($_SESSION['whmcf_csrf'], $token);
+    public static function verifyWhmToken(?string $token): bool {
+        $expected = self::cpSecurityToken();
+        return $expected !== ''
+            && is_string($token)
+            && hash_equals($expected, $token);
     }
 
     public static function encrypt(string $plain): string {
