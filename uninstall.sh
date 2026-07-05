@@ -25,7 +25,12 @@ fi
 
 if [[ -x "$UNREGISTER" ]]; then
     "$UNREGISTER" whmcloudflare 2>/dev/null || true
+    "$UNREGISTER" whmcloudflare_cpanel 2>/dev/null || true
 fi
+
+for theme in jupiter paper_lantern; do
+    rm -rf "/usr/local/cpanel/base/frontend/${theme}/whmcloudflare"
+done
 
 rm -rf "$TMPL_DIR"
 rm -rf "${WHM_DOCROOT}/cgi/addons/whmcloudflare"

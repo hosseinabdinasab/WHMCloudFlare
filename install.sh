@@ -72,8 +72,8 @@ echo "    Copying plugin files..."
 cp -a "${PLUGIN_SRC}/." "$PLUGIN_DIR/"
 install -m 0644 "${SCRIPT_DIR}/templates/whmcloudflare.html.tt" "${TMPL_DIR}/whmcloudflare.html.tt"
 
-mkdir -p "${PLUGIN_DIR}/data/config" "${PLUGIN_DIR}/data/logs"
-chmod 700 "${PLUGIN_DIR}/data" "${PLUGIN_DIR}/data/config" "${PLUGIN_DIR}/data/logs"
+mkdir -p "${PLUGIN_DIR}/data/config" "${PLUGIN_DIR}/data/logs" "${PLUGIN_DIR}/data/users"
+chmod 700 "${PLUGIN_DIR}/data" "${PLUGIN_DIR}/data/config" "${PLUGIN_DIR}/data/logs" "${PLUGIN_DIR}/data/users"
 
 # Migrate settings.json into data/config/
 migrate_cfg() {
@@ -129,12 +129,25 @@ fi
 
 /usr/local/cpanel/bin/whmapi1 nvset datastore_version 1 >/dev/null 2>&1 || true
 
+echo "    Installing cPanel user interface..."
+for theme in jupiter paper_lantern; do
+    CP_DEST="/usr/local/cpanel/base/frontend/${theme}/whmcloudflare"
+    mkdir -p "$CP_DEST"
+    install -m 0644 "${PLUGIN_SRC}/cpanel/index.live.php" "${CP_DEST}/index.live.php"
+done
+if [[ -x "$REGISTER" && -f "${SCRIPT_DIR}/appconfig/whmcloudflare_cpanel.conf" ]]; then
+    "$REGISTER" "${SCRIPT_DIR}/appconfig/whmcloudflare_cpanel.conf" 2>/dev/null || true
+    echo "    Registered cPanel plugin"
+fi
+
 echo ""
 echo "Installed."
 echo "  Plugin     : ${PLUGIN_DIR}"
 echo "  Template   : ${TMPL_DIR}/whmcloudflare.html.tt"
 echo "  WHM URL    : /cgi/whmcloudflare/whmcloudflare.cgi"
 echo "  Config     : ${PLUGIN_DIR}/data/config/settings.json"
+echo "  User data  : ${PLUGIN_DIR}/data/users/"
+echo "  cPanel UI  : /frontend/jupiter/whmcloudflare/"
 echo "  Logs       : ${PLUGIN_DIR}/data/logs/whmcloudflare.log"
 echo ""
 echo "Open WHM -> Plugins -> WHMCloudFlare"

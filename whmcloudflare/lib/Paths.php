@@ -23,6 +23,14 @@ final class Paths {
         return self::data() . '/config/' . $file;
     }
 
+    public static function userDir(string $cpuser): string {
+        return self::data() . '/users/' . $cpuser;
+    }
+
+    public static function userConfig(string $cpuser, string $file = 'config.json'): string {
+        return self::userDir($cpuser) . '/' . $file;
+    }
+
     public static function logs(): string {
         return self::data() . '/logs';
     }

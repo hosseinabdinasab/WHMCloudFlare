@@ -86,6 +86,8 @@ final class Config {
             'ttl' => 1,
             'language' => 'en',
             'log_level' => 'info',
+            'allow_user_cloudflare' => true,
+            'user_auto_sync' => true,
         ];
     }
 }

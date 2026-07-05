@@ -1,6 +1,12 @@
 <?php
 
 final class WHMAccount {
+    public static function usernameFromHook(array $data): ?string {
+        $user = HookData::get($data, 'user')
+            ?? HookData::get($data, 'username');
+        return ($user && preg_match('/^[a-z0-9_]+$/i', $user)) ? strtolower($user) : null;
+    }
+
     public static function domainFromHook(array $data): ?string {
         $domain = HookData::get($data, 'domain');
         if ($domain) {

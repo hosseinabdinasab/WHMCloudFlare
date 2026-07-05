@@ -14,6 +14,16 @@ final class Security {
         }
     }
 
+    public static function requireCpanelUser(): string {
+        $user = self::whmUser();
+        if (!$user) {
+            http_response_code(403);
+            echo '<div class="alert alert-danger">Authentication required.</div>';
+            exit;
+        }
+        return $user;
+    }
+
     public static function cpSecurityToken(): string {
         return (string) ($_ENV['cp_security_token'] ?? '');
     }

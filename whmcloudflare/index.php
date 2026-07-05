@@ -9,6 +9,11 @@ Security::requireRoot();
 $cfg = Config::load();
 Language::init((string) ($cfg['language'] ?? 'en'));
 
+$do = preg_replace('/[^a-z_]/', '', $_GET['do'] ?? $_POST['do'] ?? 'settings');
+if (!in_array($do, ['settings', 'accounts', 'logs'], true)) {
+    $do = 'settings';
+}
+
 $flash = null;
 $flashType = 'info';
 $cpToken = Security::cpSecurityToken();
@@ -21,31 +26,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action = $_POST['action'] ?? 'save';
 
         if ($action === 'test') {
-            $overrides = [
-                'api_token' => trim((string) ($_POST['api_token'] ?? '')),
-                'email' => trim((string) ($_POST['email'] ?? '')),
-                'global_api_key' => trim((string) ($_POST['global_api_key'] ?? '')),
-            ];
-            if ($overrides['api_token'] === '') {
-                $overrides['api_token'] = Config::apiToken();
+            $auth = Credentials::fromArray([
+                'api_token' => trim((string) ($_POST['api_token'] ?? '')) ?: Config::apiToken(),
+                'email' => trim((string) ($_POST['email'] ?? '')) ?: Config::email(),
+                'global_api_key' => trim((string) ($_POST['global_api_key'] ?? '')) ?: Config::globalApiKey(),
+            ]);
+            $result = CloudflareAPI::testConnection($auth);
+            $flash = Language::get($result['ok'] ? 'test_ok' : 'test_fail', ['message' => $result['message']]);
+            $flashType = $result['ok'] ? 'success' : 'error';
+        } elseif ($action === 'sync_user' && !empty($_POST['cpuser'])) {
+            $cpuser = preg_replace('/[^a-z0-9_]/', '', strtolower($_POST['cpuser']));
+            $result = SyncService::syncUser($cpuser);
+            $flash = $result['message'];
+            $flashType = $result['ok'] ? 'success' : 'error';
+            $do = 'accounts';
+        } elseif ($action === 'sync_all') {
+            $count = 0;
+            foreach (SyncService::syncAllConnected() as $r) {
+                if ($r['ok']) {
+                    $count++;
+                }
             }
-            if ($overrides['global_api_key'] === '') {
-                $overrides['global_api_key'] = Config::globalApiKey();
-            }
-            if ($overrides['email'] === '') {
-                $overrides['email'] = Config::email();
-            }
-            $result = CloudflareAPI::testConnection($overrides);
-            if ($result['ok']) {
-                $flash = Language::get('test_ok', ['message' => $result['message']]);
-                $flashType = 'success';
-            } else {
-                $flash = Language::get('test_fail', ['message' => $result['message']]);
-                $flashType = 'error';
-            }
+            $flash = Language::get('sync_all_done', ['count' => $count]);
+            $flashType = 'success';
+            $do = 'accounts';
         } else {
             $new = [
                 'enabled' => !empty($_POST['enabled']),
+                'allow_user_cloudflare' => !empty($_POST['allow_user_cloudflare']),
+                'user_auto_sync' => !empty($_POST['user_auto_sync']),
                 'auth_mode' => ($_POST['auth_mode'] ?? 'token') === 'global' ? 'global' : 'token',
                 'email' => trim((string) ($_POST['email'] ?? '')),
                 'auto_create_dns' => !empty($_POST['auto_create_dns']),
@@ -55,13 +64,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'ttl' => max(1, (int) ($_POST['ttl'] ?? 1)),
                 'language' => in_array($_POST['language'] ?? 'en', ['en', 'fa'], true) ? $_POST['language'] : 'en',
             ];
-            $token = trim((string) ($_POST['api_token'] ?? ''));
-            if ($token !== '') {
-                $new['api_token'] = $token;
+            if (trim((string) ($_POST['api_token'] ?? '')) !== '') {
+                $new['api_token'] = trim((string) $_POST['api_token']);
             }
-            $key = trim((string) ($_POST['global_api_key'] ?? ''));
-            if ($key !== '') {
-                $new['global_api_key'] = $key;
+            if (trim((string) ($_POST['global_api_key'] ?? '')) !== '') {
+                $new['global_api_key'] = trim((string) $_POST['global_api_key']);
             }
             Config::save(array_merge(Config::load(), $new));
             $cfg = Config::load();
@@ -72,133 +79,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$authMode = (string) ($cfg['auth_mode'] ?? 'token');
-$logFile = Paths::logs() . '/whmcloudflare.log';
-$logLines = [];
-if (is_file($logFile)) {
-    $lines = file($logFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
-    $logLines = array_slice($lines, -30);
-}
-
 $h = static function (string $s): string {
     return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 };
-?>
-<div class="whmcf-panel">
-<p><?php echo $h(Language::get('subtitle')); ?></p>
 
-<?php if ($flash): ?>
-<div class="alert alert-<?php echo $flashType === 'error' ? 'danger' : ($flashType === 'success' ? 'success' : 'info'); ?>">
-    <?php echo $h($flash); ?>
-</div>
-<?php endif; ?>
-
-<form method="post" class="form-horizontal" onsubmit="return whmcfSubmit(this);">
-    <input type="hidden" name="cp_security_token" value="<?php echo $h($cpToken); ?>">
-
-    <h3><?php echo $h(Language::get('settings')); ?></h3>
-
-    <div class="form-group">
-        <label class="col-sm-3 control-label"><?php echo $h(Language::get('enabled')); ?></label>
-        <div class="col-sm-9">
-            <input type="checkbox" name="enabled" value="1" <?php echo !empty($cfg['enabled']) ? 'checked' : ''; ?>>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label class="col-sm-3 control-label"><?php echo $h(Language::get('auth_mode')); ?></label>
-        <div class="col-sm-9">
-            <label class="radio-inline">
-                <input type="radio" name="auth_mode" value="token" <?php echo $authMode !== 'global' ? 'checked' : ''; ?>>
-                <?php echo $h(Language::get('auth_token')); ?>
-            </label>
-            <label class="radio-inline">
-                <input type="radio" name="auth_mode" value="global" <?php echo $authMode === 'global' ? 'checked' : ''; ?>>
-                <?php echo $h(Language::get('auth_global')); ?>
-            </label>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label class="col-sm-3 control-label"><?php echo $h(Language::get('api_token')); ?></label>
-        <div class="col-sm-9">
-            <input type="password" class="form-control" name="api_token" autocomplete="new-password" placeholder="<?php echo Config::apiToken() !== '' ? '********' : ''; ?>">
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label class="col-sm-3 control-label"><?php echo $h(Language::get('email')); ?></label>
-        <div class="col-sm-9">
-            <input type="email" class="form-control" name="email" value="<?php echo $h((string) ($cfg['email'] ?? '')); ?>">
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label class="col-sm-3 control-label"><?php echo $h(Language::get('global_api_key')); ?></label>
-        <div class="col-sm-9">
-            <input type="password" class="form-control" name="global_api_key" autocomplete="new-password" placeholder="<?php echo Config::globalApiKey() !== '' ? '********' : ''; ?>">
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label class="col-sm-3 control-label"><?php echo $h(Language::get('auto_create_dns')); ?></label>
-        <div class="col-sm-9">
-            <input type="checkbox" name="auto_create_dns" value="1" <?php echo !empty($cfg['auto_create_dns']) ? 'checked' : ''; ?>>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label class="col-sm-3 control-label"><?php echo $h(Language::get('auto_delete_dns')); ?></label>
-        <div class="col-sm-9">
-            <input type="checkbox" name="auto_delete_dns" value="1" <?php echo !empty($cfg['auto_delete_dns']) ? 'checked' : ''; ?>>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label class="col-sm-3 control-label"><?php echo $h(Language::get('auto_update_ip')); ?></label>
-        <div class="col-sm-9">
-            <input type="checkbox" name="auto_update_ip" value="1" <?php echo !empty($cfg['auto_update_ip']) ? 'checked' : ''; ?>>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label class="col-sm-3 control-label"><?php echo $h(Language::get('proxied')); ?></label>
-        <div class="col-sm-9">
-            <input type="checkbox" name="proxied" value="1" <?php echo !empty($cfg['proxied']) ? 'checked' : ''; ?>>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label class="col-sm-3 control-label"><?php echo $h(Language::get('ttl')); ?></label>
-        <div class="col-sm-9">
-            <input type="number" class="form-control" name="ttl" min="1" value="<?php echo (int) ($cfg['ttl'] ?? 1); ?>">
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label class="col-sm-3 control-label"><?php echo $h(Language::get('language')); ?></label>
-        <div class="col-sm-9">
-            <select name="language" class="form-control">
-                <option value="en" <?php echo ($cfg['language'] ?? 'en') === 'en' ? 'selected' : ''; ?>>English</option>
-                <option value="fa" <?php echo ($cfg['language'] ?? 'en') === 'fa' ? 'selected' : ''; ?>>فارسی</option>
-            </select>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <div class="col-sm-offset-3 col-sm-9">
-            <button type="submit" name="action" value="save" class="btn btn-primary"><?php echo $h(Language::get('save')); ?></button>
-            <button type="submit" name="action" value="test" class="btn btn-default"><?php echo $h(Language::get('test')); ?></button>
-        </div>
-    </div>
-</form>
-
-<h3><?php echo $h(Language::get('log_tail')); ?></h3>
-<pre class="whmcf-log"><?php
-if ($logLines) {
-    echo $h(implode("\n", $logLines));
-} else {
-    echo $h(Language::get('no_logs'));
-}
-?></pre>
-</div>
+include __DIR__ . '/ui/whm_layout.php';
