@@ -12,7 +12,7 @@ WHM plugin that syncs cPanel account DNS with Cloudflare when accounts are creat
 ## Install
 
 ```bash
-git clone https://github.com/YOUR_USER/WHMCloudFlare.git
+git clone https://github.com/hosseinabdinasab/WHMCloudFlare.git
 cd WHMCloudFlare
 chmod +x install.sh uninstall.sh
 sudo ./install.sh
