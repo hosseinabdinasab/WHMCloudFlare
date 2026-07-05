@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'title' => 'WHMCloudFlare',
+    'subtitle' => 'Automatic Cloudflare DNS for cPanel accounts',
+    'settings' => 'Settings',
+    'enabled' => 'Enable integration',
+    'auth_mode' => 'Authentication',
+    'auth_token' => 'API Token (recommended)',
+    'auth_global' => 'Global API Key + Email',
+    'api_token' => 'API Token',
+    'email' => 'Cloudflare account email',
+    'global_api_key' => 'Global API Key',
+    'auto_create_dns' => 'Create/update A record on account creation',
+    'auto_delete_dns' => 'Delete A record on account removal',
+    'auto_update_ip' => 'Update A record when site IP changes',
+    'proxied' => 'Proxy through Cloudflare (orange cloud)',
+    'ttl' => 'TTL (1 = automatic when proxied)',
+    'language' => 'Language',
+    'save' => 'Save settings',
+    'test' => 'Test connection',
+    'saved' => 'Settings saved.',
+    'test_ok' => 'Connection successful: {message}',
+    'test_fail' => 'Connection failed: {message}',
+    'csrf_error' => 'Invalid form token. Refresh and try again.',
+    'log_tail' => 'Recent log entries',
+    'no_logs' => 'No log entries yet.',
+];

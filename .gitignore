@@ -1,0 +1,4 @@
+config/settings.json
+config/.encryption_key
+logs/*.log
+*.log

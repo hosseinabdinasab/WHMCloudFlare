@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'title' => 'WHMCloudFlare',
+    'subtitle' => 'مدیریت خودکار DNS کلودفلر برای اکانت‌های cPanel',
+    'settings' => 'تنظیمات',
+    'enabled' => 'فعال‌سازی یکپارچه‌سازی',
+    'auth_mode' => 'روش احراز هویت',
+    'auth_token' => 'API Token (پیشنهادی)',
+    'auth_global' => 'Global API Key + ایمیل',
+    'api_token' => 'API Token',
+    'email' => 'ایمیل حساب Cloudflare',
+    'global_api_key' => 'Global API Key',
+    'auto_create_dns' => 'ایجاد/به‌روزرسانی رکورد A هنگام ساخت اکانت',
+    'auto_delete_dns' => 'حذف رکورد A هنگام حذف اکانت',
+    'auto_update_ip' => 'به‌روزرسانی رکورد A هنگام تغییر IP سایت',
+    'proxied' => 'پروکسی از طریق Cloudflare (ابر نارنجی)',
+    'ttl' => 'TTL (۱ = خودکار در حالت پروکسی)',
+    'language' => 'زبان',
+    'save' => 'ذخیره تنظیمات',
+    'test' => 'تست اتصال',
+    'saved' => 'تنظیمات ذخیره شد.',
+    'test_ok' => 'اتصال موفق: {message}',
+    'test_fail' => 'اتصال ناموفق: {message}',
+    'csrf_error' => 'توکن فرم نامعتبر است. صفحه را رفرش کنید.',
+    'log_tail' => 'آخرین لاگ‌ها',
+    'no_logs' => 'هنوز لاگی ثبت نشده است.',
+];
