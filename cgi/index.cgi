@@ -1,7 +1,4 @@
-#!/usr/local/cpanel/3rdparty/bin/php -q
+#!/usr/local/cpanel/3rdparty/bin/php
 <?php
-/**
- * WHM CGI entry — must be PHP with shebang (not shell+exec php CLI).
- * CLI mode does not emit Content-Type; browser shows raw HTML as text.
- */
+header('Content-Type: text/html; charset=utf-8');
 require '/var/cpanel/addons/whmcloudflare/ui/index.php';
